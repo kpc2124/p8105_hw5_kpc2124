@@ -64,20 +64,22 @@ Rules:
  
 ```{r}
 iris_na = function(c) {
+  ## if the column contains numeric variables, replace NAs with the row mean
   if (is.numeric(c)) {
     replace_na(c, round(mean(c, na.rm = TRUE),2))
   }
+  ## if the column contains character variables, replace NAs with virginica
   else if (is.character(c)) {
     replace_na(c, "virginica")
   }
 }
 
+## mapping the function to the iris_with_missing
 iris_full = 
   map(iris_with_missing,iris_na) %>% 
   bind_cols()
 
 ## plotted as a table for readibility and to see that all NAs have been replaced
-
 iris_full %>% 
   kable()
 ```
@@ -86,24 +88,72 @@ iris_full %>%
 
 Create a tidy dataframe containing data from all participants, including the subject ID, arm, and observations over time:
 
- - Start with a dataframe containing all file names; the list.files function will help
+Start with a dataframe containing all file names; the list.files function will help
 ```{r}
 study_df = 
-  list.files(path = "./data")
+  list.files(path = "./data", pattern = '*.csv')
 ```
 
- - Iterate over file names and read in data for each subject using purrr::map and saving the result as a new variable in the dataframe
+Iterate over file names and read in data for each subject using `purrr::map` and saving the result as a new variable in the dataframe
 ```{r}
+## function appends file name to path name so that it can be read using read_csv
+read_data = function(filename) {
+  read.csv(str_c("./data/",filename))
+}
 
+## mapping the function to study_df
+read_map = map_df(study_df,read_data)
+
+## combining file names with corresponding data
+study_df = 
+  study_df %>% 
+  tibble(file_names = .) %>% 
+  bind_cols(read_map)
 ```
- 
- - Tidy the result; manipulate file names to include control arm and subject ID, make sure weekly observations are “tidy”, and do any other tidying that’s necessary
-```{r}
 
+Tidy the result; manipulate file names to include control arm and subject ID, make sure weekly observations are “tidy”, and do any other tidying that’s necessary
+```{r}
+study_df = 
+study_df %>% 
+  ## separating file_names into abbreviated arm and id
+  separate(file_names, into = c("arm","id"), sep = "_") %>% 
+  mutate(
+    ## unabbreviating arm
+    arm = case_when(
+      arm == "con" ~ "control",
+      arm == "exp" ~ "experiment"
+    ),
+    ## removing '.csv' from id
+    id = str_remove(id,".csv")
+  ) %>% 
+  ## rounding all datapoints to 2 decimal places
+  mutate_if(is.numeric, round, digits = 2)
 ```
 
 Make a spaghetti plot showing observations on each subject over time, and comment on differences between groups.
+```{r}
+spag_plot = 
+study_df %>% 
+  pivot_longer(
+    week_1:week_8,
+    names_to = "week",
+    values_to = "obs"
+  ) %>% 
+  mutate(
+    week = str_remove(week,"week_"),
+    week = as.numeric(week)
+  ) %>% 
+  ggplot(aes(x = week, y = obs, color = id)) +
+  geom_line() + geom_point() +
+  facet_grid(~arm)
+
+spag_plot
+```
+
+ALthough observations for each participant in the control group appear to fluctuate over time, if we look observations at week 1 and week 8, it looks as though observations remain fairly constant over the study period.
+
+In comparison, observations for participants in the experimental group appear to increase over the study period. Although we have no idea what this data represents, observations between the experimental and control groups appear to differ significantly, which could mean that the exposure the experimental group received is having a significant effect on the outcome of interest.
 
 
-
+## Problem 3
 
