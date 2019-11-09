@@ -44,7 +44,9 @@ theme_set(theme_minimal())
 ```
 
 
-# Problem 1 - iris dataset
+## Problem 1 - iris dataset
+
+Write a function that takes a vector as an argument; replaces missing values using the rules defined; and returns the resulting vector. Apply this function to the columns of iris_with_missing using a map statement.
 
 ```{r}
 set.seed(10)
@@ -54,12 +56,12 @@ iris_with_missing = iris %>%
   mutate(Species = as.character(Species))
 ```
 
-Write a function that takes a vector as an argument; replaces missing values using the rules defined; and returns the resulting vector. Apply this function to the columns of iris_with_missing using a map statement.
-
 Rules:
- - For numeric variables, you should fill in missing values with the mean of non-missing values
- - For character variables, you should fill in missing values with "virginica"
 
+ - For numeric variables, you should fill in missing values with the mean of non-missing values
+ 
+ - For character variables, you should fill in missing values with "virginica"
+ 
 ```{r}
 iris_na = function(c) {
   if (is.numeric(c)) {
@@ -70,27 +72,37 @@ iris_na = function(c) {
   }
 }
 
-output = 
+iris_full = 
   map(iris_with_missing,iris_na) %>% 
   bind_cols()
 
-output
+## plotted as a table for readibility and to see that all NAs have been replaced
+
+iris_full %>% 
+  kable()
 ```
 
-
-# Problem 2 - longitudinal study
-
-This zip file contains data from a longitudinal study that included a control arm and an experimental arm. Data for each participant is included in a separate file, and file names include the subject ID and arm.
+## Problem 2 - longitudinal study
 
 Create a tidy dataframe containing data from all participants, including the subject ID, arm, and observations over time:
 
-Start with a dataframe containing all file names; the list.files function will help
-Iterate over file names and read in data for each subject using purrr::map and saving the result as a new variable in the dataframe
-Tidy the result; manipulate file names to include control arm and subject ID, make sure weekly observations are “tidy”, and do any other tidying that’s necessary
+ - Start with a dataframe containing all file names; the list.files function will help
+```{r}
+study_df = 
+  list.files(path = "./data")
+```
+
+ - Iterate over file names and read in data for each subject using purrr::map and saving the result as a new variable in the dataframe
+```{r}
+
+```
+ 
+ - Tidy the result; manipulate file names to include control arm and subject ID, make sure weekly observations are “tidy”, and do any other tidying that’s necessary
+```{r}
+
+```
+
 Make a spaghetti plot showing observations on each subject over time, and comment on differences between groups.
-
-
-
 
 
 
